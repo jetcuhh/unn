@@ -133,23 +133,7 @@ if command -v gtk-update-icon-cache >/dev/null 2>&1; then
     gtk-update-icon-cache -qtf "$prefix/share/icons/hicolor" >/dev/null 2>&1 || true
 fi
 
-if command -v ldd >/dev/null 2>&1; then
-    missing=$(ldd "$prefix/bin/unn" 2>/dev/null | awk '/not found/ { print $1 }' | sort -u)
-    if [ -n "$missing" ]; then
-        echo
-        echo "warning: missing shared libraries:"
-        printf '  %s\n' $missing
-        if command -v pacman >/dev/null 2>&1; then
-            echo "  sudo pacman -S --needed wayland libxkbcommon fontconfig freetype2 harfbuzz"
-        elif command -v apt-get >/dev/null 2>&1; then
-            echo "  sudo apt-get install libwayland-client0 libxkbcommon0 libfontconfig1 libfreetype6 libharfbuzz0b"
-        elif command -v dnf >/dev/null 2>&1; then
-            echo "  sudo dnf install libwayland-client libxkbcommon fontconfig freetype harfbuzz"
-        elif command -v apk >/dev/null 2>&1; then
-            echo "  sudo apk add wayland-libs-client libxkbcommon fontconfig freetype harfbuzz"
-        fi
-    fi
-fi
+
 
 echo
 echo "installed unn $ver ($libc) to $prefix"
