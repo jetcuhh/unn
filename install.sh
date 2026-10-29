@@ -1,11 +1,5 @@
 #!/bin/sh
-# Install unn from a GitHub release.
-#
-#   curl -fsSL https://raw.githubusercontent.com/jetcuhh/unn/main/install.sh | sh
-#
-# Environment:
-#   PREFIX    install prefix (default: ~/.local)
-#   VERSION   release to install, with or without the leading v (default: latest)
+
 set -eu
 
 repo=jetcuhh/unn
@@ -68,7 +62,7 @@ esac
 libc=gnu
 if ldd --version 2>&1 | grep -qi musl; then
     libc=musl
-elif [ -e "/lib/ld-musl-$arch.so.1" ] && [ ! -e "/lib64/ld-linux-$arch.so.2" ]; then
+elif [ -e "/lib/ld-musl-$arch.so.1" ] && [ ! -e /lib64/ld-linux-x86-64.so.2 ]; then
     libc=musl
 fi
 
@@ -105,9 +99,7 @@ tar -xzf "$tmp/$name.tar.gz" -C "$tmp"
 src=$tmp/$name
 [ -x "$src/bin/unn" ] || die "malformed archive: bin/unn is missing"
 
-# Replace atomically: copy next to the target, then rename over it. A
-# plain cp onto a running binary fails with "Text file busy"; a rename
-# works while the old version is running (it keeps running until closed).
+
 install_file() {
     mkdir -p "$(dirname "$2")"
     cp "$1" "$2.new.$$"
@@ -126,32 +118,5 @@ install_file "$src/share/doc/unn/examples/50-unn.conf" \
     "$prefix/share/doc/unn/examples/50-unn.conf" 644
 install_file "$src/share/terminfo/u/unn" "$prefix/share/terminfo/u/unn" 644
 
-if command -v update-desktop-database >/dev/null 2>&1; then
-    update-desktop-database "$prefix/share/applications" >/dev/null 2>&1 || true
-fi
-if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-    gtk-update-icon-cache -qtf "$prefix/share/icons/hicolor" >/dev/null 2>&1 || true
-fi
-
-
-
 echo
 echo "installed unn $ver ($libc) to $prefix"
-found=$(command -v unn 2>/dev/null || true)
-if [ -n "$found" ] && [ "$found" != "$prefix/bin/unn" ]; then
-    echo "warning: 'unn' in your PATH is $found, which shadows the one just installed"
-    echo "  remove it, or put $prefix/bin earlier in PATH"
-fi
-if pgrep -x unn >/dev/null 2>&1; then
-    echo "note: unn is running; restart it to use the new version"
-fi
-case ":$PATH:" in
-    *":$prefix/bin:"*) ;;
-    *)
-        echo "add it to PATH:"
-        echo "  fish_add_path $prefix/bin"
-        ;;
-esac
-if [ -z "${WAYLAND_DISPLAY:-}" ]; then
-    echo "note: no WAYLAND_DISPLAY in this environment; unn needs a Wayland session"
-fi
